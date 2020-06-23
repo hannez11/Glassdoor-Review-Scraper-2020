@@ -245,40 +245,52 @@ def scrape(field, review, author):
 
     def scrape_overall_rating(review):
         try:
-            ratings = review.find_element_by_class_name('gdStars')
-            overall = ratings.find_element_by_class_name(
-                'rating').find_element_by_class_name('value-title')
-            res = overall.get_attribute('title')
+            overall = review.find_element_by_class_name("v2__EIReviewsRatingsStylesV2__ratingNum").text
+            res = overall
         except Exception:
             res = np.nan
         return res
 
-    def _scrape_subrating(i):
+    def _scrape_subrating(subratingtext, subratingindex):
         try:
-            ratings = review.find_element_by_class_name('gdStars')
-            subratings = ratings.find_element_by_class_name(
-                'subRatings').find_element_by_tag_name('ul')
-            this_one = subratings.find_elements_by_tag_name('li')[i]
-            res = this_one.find_element_by_class_name(
-                'gdBars').get_attribute('title')
+            ratings = review.find_element_by_class_name('gdStars') #info with the 5 rating subcategories
+            subratings = ratings.find_element_by_class_name('subRatings').find_elements_by_tag_name('li') #each subrating has an own list item
+            if(len(subratingtext)) == 5: # if there are all 5 subratings, then the order of them will always be identical
+                res = subratings[subratingindex].find_element_by_class_name('gdBars').get_attribute('title')
+                return res
+            else: # if there is atleast one subrating missing, all of them need to be iterated through
+                for i in subratings:
+                    if i.find_element_by_tag_name('div').get_attribute('innerText') == subratingtext: #.text doesnt work since element isnt present in the viewport
+                        res = i.find_element_by_class_name('gdBars').get_attribute('title') #get float value of current sub rating
+                        return res
+                    res = np.nan #will not get here if element has already been found
         except Exception:
             res = np.nan
         return res
+
+        #old approach. doesnt work when review is missing >= 1 of the subrating-categories (subratings get mismatched)
+        # try:
+        #     ratings = review.find_element_by_class_name('gdStars')
+        #     subratings = ratings.find_element_by_class_name('subRatings').find_element_by_tag_name('ul')
+        #     this_one = subratings.find_elements_by_tag_name('li')[i]
+        #     res = this_one.find_element_by_class_name('gdBars').get_attribute('title')
+        # except Exception:
+        #     res = np.nan
 
     def scrape_work_life_balance(review):
-        return _scrape_subrating(0)
+        return _scrape_subrating("Work/Life Balance", 0) #go for subratingindex if all 5 subratings exist
 
     def scrape_culture_and_values(review):
-        return _scrape_subrating(1)
+        return _scrape_subrating("Culture & Values", 1)
 
     def scrape_career_opportunities(review):
-        return _scrape_subrating(2)
+        return _scrape_subrating("Career Opportunities", 2)
 
     def scrape_comp_and_benefits(review):
-        return _scrape_subrating(3)
+        return _scrape_subrating("Compensation and Benefits", 3)
 
     def scrape_senior_management(review):
-        return _scrape_subrating(4)
+        return _scrape_subrating("Senior Management", 4)
 
 
     def scrape_recommends(review):

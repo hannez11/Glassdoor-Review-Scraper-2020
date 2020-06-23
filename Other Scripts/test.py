@@ -13,7 +13,7 @@ chrome_options.add_argument('--remote-debugging-port=45447') #use different port
 chrome_options.add_argument('--headless')
 browser = wd.Chrome(options=chrome_options)
 
-browser.get("https://www.glassdoor.com/Reviews/Pegasystems-Reviews-E5936.htm")
+browser.get("https://www.glassdoor.com/Reviews/Heritage-Insurance-Reviews-E1455034.htm")
 time.sleep(1)
 
 #page navigation
@@ -28,6 +28,38 @@ time.sleep(1)
 
 #remove line break error of pros/cons
 reviews = browser.find_elements_by_class_name('empReview')
+
+#overallrating
+for index, review in enumerate(reviews, 1):
+    if index < 4:
+        print(f"review {index}")
+        # ratings = review.find_element_by_class_name('gdStars')
+
+        x = review.find_element_by_class_name("v2__EIReviewsRatingsStylesV2__ratingNum").text
+        print(x)
+        # overall = ratings.find_element_by_class_name('rating').find_element_by_tag_name('span').get_attribute('title')
+        # print(overall)
+
+#subratings
+# for index, review in enumerate(reviews, 1):
+#     if index < 4:
+#         print(f"review {index}")
+#         ratings = review.find_element_by_class_name('gdStars')
+
+        # subratings = review.find_element_by_class_name('subRatings').find_elements_by_tag_name('li')
+        # print(len(subratings))
+        # this_one = subratings.find_elements_by_tag_name('li')[i]
+        
+        # for i in subratings:
+            # print(i.get_attribute('innerHTML'))
+            # print(i.find_element_by_tag_name('div').get_attribute('innerText')) #.text doesnt work since element isnt present in the viewport
+
+            # print("rating", i.find_element_by_class_name('gdBars').get_attribute('title'))
+        #     if i.find_element_by_tag_name('div').get_attribute('innerText') == "Work/Life Balance": #.text doesnt work since element isnt present in the viewport
+                # balance_rating = i.find_element_by_class_name('gdBars').get_attribute('title') #get float value of current sub rating
+        #         print(i.find_element_by_tag_name('div').get_attribute('innerText'))
+
+
 
 # for index, review in enumerate(reviews, 1):
 #     print(review.text)
@@ -53,27 +85,28 @@ reviews = browser.find_elements_by_class_name('empReview')
 #         #     status = author.text.split('-')[0]
 #         #     print("status", status, len(status), len(status.strip()))
 
-actions = ActionChains(browser)
 
 # get advice to management (hidden under continue button)
-for index, review in enumerate(reviews, 1):
-    if index < 6:
-        print("index:", index)
-        print("lenge1", len(review.find_elements_by_class_name('v2__EIReviewDetailsV2__fullWidth')))
+# for index, review in enumerate(reviews, 1):
+#     if index < 6:
+#         print("index:", index)
+#         print("lenge1", len(review.find_elements_by_class_name('v2__EIReviewDetailsV2__fullWidth')))
         
-        try:
-            # more_link.click()
-            javaScript = "document.getElementsByClassName('v2__EIReviewDetailsV2__continueReading')[0].click();"
-            browser.execute_script(javaScript)
-            print("lenge", len(review.find_elements_by_class_name('v2__EIReviewDetailsV2__fullWidth')))
-            advice = review.find_elements_by_class_name('v2__EIReviewDetailsV2__fullWidth')[2].text
-            if len(review.find_elements_by_class_name('v2__EIReviewDetailsV2__fullWidth')) == 4:
-                advice2 = review.find_elements_by_class_name('v2__EIReviewDetailsV2__fullWidth')[3].text
-                print("2", advice2)
-            print("1", advice)
-        except Exception as e:
-            print(getattr(e, 'message', repr(e)))
-            print(getattr(e, 'message', str(e)))
+#         try:
+#             # more_link.click()
+#             javaScript = "document.getElementsByClassName('v2__EIReviewDetailsV2__continueReading')[0].click();"
+#             browser.execute_script(javaScript)
+#             print("lenge", len(review.find_elements_by_class_name('v2__EIReviewDetailsV2__fullWidth')))
+#             advice = review.find_elements_by_class_name('v2__EIReviewDetailsV2__fullWidth')[2].text
+#             if len(review.find_elements_by_class_name('v2__EIReviewDetailsV2__fullWidth')) == 4:
+#                 advice2 = review.find_elements_by_class_name('v2__EIReviewDetailsV2__fullWidth')[3].text
+#                 print("2", advice2)
+#             print("1", advice)
+#         except Exception as e:
+#             print(getattr(e, 'message', repr(e)))
+#             print(getattr(e, 'message', str(e)))
+
+
 
 
 browser.quit() #quit current chromium session

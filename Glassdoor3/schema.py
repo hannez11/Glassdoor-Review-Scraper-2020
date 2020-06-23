@@ -17,6 +17,7 @@ SCHEMA = [
     'recommends',
     'positive_outlook',
     'approves_of_CEO',
+    'helpful',
     'advice_to_mgmt',
-    # 'helpful',
+    "response",
 ]
