@@ -105,7 +105,7 @@ ch.setLevel(logging.INFO)
 logger.addHandler(ch)
 formatter = logging.Formatter(
     # 'PROCESS1 %(asctime)s %(levelname)s %(lineno)d: %(filename)s(%(process)d) - %(message)s')
-    'PROCESS3 %(asctime)s - %(message)s', "%H:%M:%S")
+    'PROCESS4 %(asctime)s - %(message)s', "%H:%M:%S")
 ch.setFormatter(formatter)
 
 logging.getLogger('selenium').setLevel(logging.CRITICAL)
@@ -465,7 +465,7 @@ def sign_in():
     # url = 'https://www.glassdoor.com'
     browser.get(url)
 
-    # time.sleep(120) #in order the set glassdoor to english and avoid country redirect, activate the sleep, start the script for one company, and then set language in the bottom right of the webpage in the non-headless chromium
+    time.sleep(120) #in order the set glassdoor to english and avoid country redirect, activate the sleep, start the script for one company, and then set language in the bottom right of the webpage in the non-headless chromium
 
     # import pdb;pdb.set_trace()
 
@@ -486,12 +486,12 @@ def get_browser():
     logger.info('Configuring browser')
     chrome_options = wd.ChromeOptions()
     if args.headless: #dont set user-data-dir, otherwise chromium wont load for whatever reason. headless still uses cookies though
-        chrome_options.add_argument('--remote-debugging-port=45449') #use different port for different processes
+        chrome_options.add_argument('--remote-debugging-port=45450') #use different port for different processes
         chrome_options.add_argument('--headless')
     else:
-        chrome_options.add_argument("user-data-dir=selenium3") #saves cookies -> set language the United States in the bottom right
+        chrome_options.add_argument("user-data-dir=selenium4") #saves cookies -> set language the United States in the bottom right
     chrome_options.add_argument('log-level=3')
-    browser = wd.Chrome('F://Coding//Projects//Glassdoor//Glassdoor3//chromedriver.exe', options=chrome_options) #change for each process
+    browser = wd.Chrome('F://Coding//Projects//Glassdoor//Glassdoor4//chromedriver.exe', options=chrome_options) #change for each process
     return browser
 
 
@@ -567,7 +567,7 @@ def main():
         res = res.append(reviews_df)
 
     logger.info(f'Writing {len(res)} reviews to file {args.file}')
-    export_path = os.path.join("F://Coding//Projects//Glassdoor//Glassdoor3//csvs", args.file)
+    export_path = os.path.join("F://Coding//Projects//Glassdoor//Glassdoor4//csvs", args.file)
     res.to_csv(path_or_buf = export_path, index=False, encoding='utf-8')
 
     browser.quit() #quit current chromium session

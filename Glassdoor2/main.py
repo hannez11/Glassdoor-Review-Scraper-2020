@@ -52,7 +52,7 @@ parser.add_argument('--headless', action='store_true',
 parser.add_argument('--username', help='Email address used to sign in to GD.')
 parser.add_argument('-p', '--password', help='Password to sign in to GD.')
 parser.add_argument('-c', '--credentials', help='Credentials file')
-parser.add_argument('-l', '--limit', default=9999,
+parser.add_argument('-l', '--limit', default=3000,
                     action='store', type=int, help='Max reviews to scrape')
 parser.add_argument('--start_from_url', action='store_true',
                     help='Start scraping from the passed URL.')
@@ -365,14 +365,25 @@ def extract_from_page():
             return False
 
     def extract_review(review):
-        author = review.find_element_by_class_name('authorInfo') #consisting of .authorJobTitle and .authorLocation
-        res = {}
-        # import pdb;pdb.set_trace()
-        for field in SCHEMA:
-            res[field] = scrape(field, review, author)
+        try:
+            author = review.find_element_by_class_name('authorInfo') #consisting of .authorJobTitle and .authorLocation
+            res = {}
+            # import pdb;pdb.set_trace()
+            for field in SCHEMA:
+                res[field] = scrape(field, review, author)
 
-        assert set(res.keys()) == set(SCHEMA)
-        return res
+            assert set(res.keys()) == set(SCHEMA)
+            return res
+        except:
+            res = {}
+            for index, field in enumerate(SCHEMA):
+                if index == 0:
+                    res[field] = args.file.split(".")[0] #e.g. Microsoft.csv -> Microsoft
+                elif index == 1:
+                    res[field] = "ERROR (Content Blocked)"
+                else:
+                    res[field] = ""
+            return res
 
     # logger.info(f'Extracting reviews from page {page[0]}')
 
