@@ -7,7 +7,7 @@ pages = multiscrape.Multi().pages
 # ]
 
 left_pages = []
-done = [filename.split(".csv")[0] for filename in os.listdir("C:\\Users\\hannez\\Desktop\\GD")]
+done = [filename.split(".csv")[0] for filename in os.listdir("C:\\Users\\hannez\\Desktop\\1")]
 
 for page in pages:
     firm = page[1]

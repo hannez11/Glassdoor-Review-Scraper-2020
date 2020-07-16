@@ -13,7 +13,7 @@ chrome_options.add_argument('--remote-debugging-port=45447') #use different port
 chrome_options.add_argument('--headless')
 browser = wd.Chrome(options=chrome_options)
 
-browser.get("https://www.glassdoor.com/Reviews/Heritage-Insurance-Reviews-E1455034.htm")
+browser.get("https://www.glassdoor.com/Reviews/PagerDuty-Reviews-E704466_P7.htm?sort.sortType=RD&sort.ascending=false")
 time.sleep(1)
 
 #page navigation
@@ -28,6 +28,20 @@ time.sleep(1)
 
 #remove line break error of pros/cons
 reviews = browser.find_elements_by_class_name('empReview')
+
+#recommends (recommends, outloook, ceoapproval)
+for index, review in enumerate(reviews, 1):
+    if index < 6:
+            res = review.find_element_by_class_name('recommends').text
+            res = res.split('\n')
+            print("all", res) #list?
+            if "Recommends" in res[0]:
+                print("recommends", res[0])
+            else:
+                print("recommends not found")
+
+
+
 
 #overallrating
 for index, review in enumerate(reviews, 1):

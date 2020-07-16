@@ -52,7 +52,7 @@ parser.add_argument('--headless', action='store_true',
 parser.add_argument('--username', help='Email address used to sign in to GD.')
 parser.add_argument('-p', '--password', help='Password to sign in to GD.')
 parser.add_argument('-c', '--credentials', help='Credentials file')
-parser.add_argument('-l', '--limit', default=3000,
+parser.add_argument('-l', '--limit', default=50000,
                     action='store', type=int, help='Max reviews to scrape')
 parser.add_argument('--start_from_url', action='store_true',
                     help='Start scraping from the passed URL.')
@@ -297,7 +297,10 @@ def scrape(field, review, author):
         try:
             res = review.find_element_by_class_name('recommends').text
             res = res.split('\n')
-            return res[0]
+            if "Recommend" in res[0]: #recommends always takes the first index
+                return res[0]
+            else:
+                return np.nan
         except:
             return np.nan
     
@@ -305,11 +308,20 @@ def scrape(field, review, author):
         try:
             res = review.find_element_by_class_name('recommends').text
             res = res.split('\n')
-            if len(res) == 2 or len(res) == 3:
-                if 'CEO' in res[1]:
-                    return np.nan
+            if len(res) == 3 and "Outlook" in res[1]: #standard case
                 return res[1]
-            return np.nan
+            elif len(res) < 3:
+                if "Outlook" in res[0]: #outlook and approval
+                    return res[0]
+                elif "Outlook" in res[1]: #recommends and outlook
+                    return res[1]
+                else: 
+                    return np.nan
+            # if len(res) == 2 or len(res) == 3:
+            #     if 'CEO' in res[1]:
+            #         return np.nan
+            #     return res[1]
+            # return np.nan
         except:
             return np.nan
     
@@ -319,10 +331,13 @@ def scrape(field, review, author):
             res = res.split('\n')
             if len(res) == 3:
                 return res[2]
-            if len(res) == 2:
-                if 'CEO' in res[1]:
+            elif len(res) < 3:
+                if "CEO" in res[0]: #only CEO
+                    return res[0]
+                elif "CEO" in res[1]: #recommends OR outlook and ceo
                     return res[1]
-            return np.nan
+                else:
+                    return np.nan
         except:
             return np.nan
 
@@ -465,7 +480,7 @@ def sign_in():
     # url = 'https://www.glassdoor.com'
     browser.get(url)
 
-    # time.sleep(120) #in order the set glassdoor to english and avoid country redirect, activate the sleep, start the script for one company, and then set language in the bottom right of the webpage in the non-headless chromium
+    time.sleep(120) #in order the set glassdoor to english and avoid country redirect, activate the sleep, start the script for one company, and then set language in the bottom right of the webpage in the non-headless chromium
 
     # import pdb;pdb.set_trace()
 
@@ -549,6 +564,7 @@ def main():
         except:
             total_english_reviews = 0
         logger.info(f'Scraping {total_english_reviews} total reviews from {args.file.split(".")[0]}')
+        res = res.append({"company_name": args.file.split(".")[0], "date": "TOTAL", "employee_title": total_english_reviews}, ignore_index=True) #save total amount of english reviews in the 2nd row of the csv file
         page[0] = get_current_page()
         logger.info(f'Starting from page {page[0]:,}.')
         time.sleep(1)
@@ -565,6 +581,11 @@ def main():
         go_to_next_page()
         reviews_df = extract_from_page()
         res = res.append(reviews_df)
+        # logger.info(len(res)) #19, 29,39,...
+        if (len(res)+1) % 500 == 0: #save after every 500 scraped reviews
+            logger.info(f"Saved state after {len(res)} reviews")
+            export_path = os.path.join("F://Coding//Projects//Glassdoor//Glassdoor1//csvs", args.file)
+            res.to_csv(path_or_buf = export_path, index=False, encoding='utf-8')
 
     logger.info(f'Writing {len(res)} reviews to file {args.file}')
     export_path = os.path.join("F://Coding//Projects//Glassdoor//Glassdoor3//csvs", args.file)
