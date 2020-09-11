@@ -505,6 +505,7 @@ def get_browser():
         chrome_options.add_argument('--headless')
     else:
         chrome_options.add_argument("user-data-dir=selenium2") #saves cookies -> set language the United States in the bottom right
+    # chrome_options.add_argument('--no-sandbox') # Bypass OS security model
     chrome_options.add_argument('log-level=3')
     browser = wd.Chrome('F://Coding//Projects//Glassdoor//Glassdoor2//chromedriver.exe', options=chrome_options) #change for each process
     return browser
@@ -581,10 +582,10 @@ def main():
         go_to_next_page()
         reviews_df = extract_from_page()
         res = res.append(reviews_df)
-        # logger.info(len(res)) #19, 29,39,...
-        if (len(res)+1) % 500 == 0: #save after every 500 scraped reviews
+        # logger.info(len(res)) #19, 29,39,... last digit can be random due to discarded reviews
+        if int(len(res)/10) % 50 == 0: #save after every 500 scraped reviews
             logger.info(f"Saved state after {len(res)} reviews")
-            export_path = os.path.join("F://Coding//Projects//Glassdoor//Glassdoor1//csvs", args.file)
+            export_path = os.path.join("F://Coding//Projects//Glassdoor//Glassdoor2//csvs", args.file)
             res.to_csv(path_or_buf = export_path, index=False, encoding='utf-8')
 
     logger.info(f'Writing {len(res)} reviews to file {args.file}')

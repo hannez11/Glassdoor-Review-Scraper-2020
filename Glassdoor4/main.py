@@ -581,10 +581,10 @@ def main():
         reviews_df = extract_from_page()
         res = res.append(reviews_df)
 
-        # logger.info(len(res)) #19, 29,39,...
-        if (len(res)+1) % 500 == 0: #save after every 500 scraped reviews
+        # logger.info(len(res)) #19, 29,39,... last digit can be random due to discarded reviews
+        if int(len(res)/10) % 50 == 0: #save after every 500 scraped reviews
             logger.info(f"Saved state after {len(res)} reviews")
-            export_path = os.path.join("F://Coding//Projects//Glassdoor//Glassdoor1//csvs", args.file)
+            export_path = os.path.join("F://Coding//Projects//Glassdoor//Glassdoor4//csvs", args.file)
             res.to_csv(path_or_buf = export_path, index=False, encoding='utf-8')
 
     logger.info(f'Writing {len(res)} reviews to file {args.file}')
