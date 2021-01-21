@@ -29,8 +29,9 @@ import logging
 import logging.config
 from selenium import webdriver as wd
 import selenium
+from selenium.webdriver import ActionChains
 import numpy as np
-from schema import SCHEMA #list of all relevant variables located in the same dir
+from schema import SCHEMA #list of all relevant variables located in the same dir/schema.py
 import json
 import urllib
 import datetime as dt
@@ -66,7 +67,7 @@ parser.add_argument(
     Only use this option with --start_from_url.\
     You also must have sorted Glassdoor reviews DESCENDING by date.',
     type=lambda s: dt.datetime.strptime(s, "%Y-%m-%d"))
-args = parser.parse_args() #e.g. args.file
+args = parser.parse_args() #e.g. args.file or args.url
 
 if not args.start_from_url and (args.max_date or args.min_date):
     raise Exception(
@@ -404,7 +405,7 @@ def extract_from_page():
     res = pd.DataFrame([], columns=SCHEMA)
 
     global reviews #set reviews as global variable so that it can be used in main() to check whether there are any reviews on the current page
-    reviews = browser.find_elements_by_class_name('empReview')
+    reviews = browser.find_elements_by_class_name('empReview') #len(reviews) == 0 if there are no reviews on the current page
     logger.info(f'{args.file}: Found {len(reviews)} reviews on page {page[0]}')
 
 
@@ -428,11 +429,27 @@ def extract_from_page():
 
 
 def more_pages():
+    # outdated selector (before dec 2020)
+    # try:
+    #     # paging_control = browser.find_element_by_class_name('pagingControls')
+    #     next_ = browser.find_element_by_class_name('pagination__PaginationStyle__next')
+    #     next_.find_element_by_tag_name('a')
+    #     return True
+    # except selenium.common.exceptions.NoSuchElementException:
+    #     return False
     try:
-        # paging_control = browser.find_element_by_class_name('pagingControls')
-        next_ = browser.find_element_by_class_name('pagination__PaginationStyle__next')
-        next_.find_element_by_tag_name('a')
-        return True
+        # if len(reviews) == 0:
+        #     return False
+        # else:
+        #     return True
+
+        # alternative from git (jan 2021)
+        current = browser.find_element_by_class_name('selected')
+        pages = browser.find_element_by_class_name('pageContainer').text.split()
+        if int(pages[-1]) != int(current.text): #current page unequal last clickable page in the site navigation pane
+            return True
+        else:
+            return False
     except selenium.common.exceptions.NoSuchElementException:
         return False
 
@@ -440,11 +457,21 @@ def more_pages():
 def go_to_next_page():
     # logger.info(f'{args.file}: Going to page {page[0] + 1}')
     # paging_control = browser.find_element_by_class_name('pagingControls')
-    next_ = browser.find_element_by_class_name(
-        'pagination__PaginationStyle__next').find_element_by_tag_name('a')
-    browser.get(next_.get_attribute('href'))
-    time.sleep(1)
-    page[0] = page[0] + 1
+    # next_ = browser.find_element_by_class_name(
+    #     'pagination__PaginationStyle__next').find_element_by_tag_name('a')
+    # browser.get(next_.get_attribute('href')) #The driver.get method will navigate to a page given by the URL
+    next_ = browser.find_element_by_class_name('nextButton')
+    current_before = int(browser.find_element_by_class_name('selected').text)
+    # logger.info(f"current_before page before click: {current_before}")
+    ActionChains(browser).click(next_).perform() #click next button
+    time.sleep(2)
+    current_after = int(browser.find_element_by_class_name('selected').text)
+    # logger.info(f"current_after page after click: {current_after}")
+    if current_after == current_before: #apparently the next button is hidden the first time a page is loaded in headless mode?!
+        # logger.info(f"reclick next button")
+        go_to_next_page()
+    else:
+        page[0] = page[0] + 1
 
 
 def no_reviews():
@@ -495,7 +522,6 @@ def sign_in():
     browser.get(args.url)
 
 
-
 def get_browser():
     logger.info('Configuring browser')
     chrome_options = wd.ChromeOptions()
@@ -514,9 +540,11 @@ def get_current_page():
     # logger.info('Getting current page number')
     # paging_control = browser.find_element_by_class_name('eiReviews__EIReviewsPageStyles__pagination noTabover mt')
     try:
-        current = int(browser.find_element_by_class_name('pagination__PaginationStyle__current').text)
+        current = int(browser.find_element_by_class_name('selected').text)
+        logger.info(f"current page: {current}")
         return current
     except selenium.common.exceptions.NoSuchElementException: #if there is only one review page, there will be no page indicator
+        logger.info("0")
         return 0
 
 
@@ -537,6 +565,7 @@ browser = get_browser()
 page = [1]
 idx = [0]
 date_limit_reached = [False]
+# valid_page = [True]
 
 
 def main():
@@ -545,6 +574,7 @@ def main():
 
     res = pd.DataFrame([], columns=SCHEMA)
 
+    # time.sleep(120) #to set cookies
     # sign_in()
 
     if not args.start_from_url:
@@ -557,32 +587,33 @@ def main():
         page[0] = get_current_page()
         logger.info(f'Starting from page {page[0]:,}.')
         time.sleep(1)
-    else:
+    else: #1. opens page
         browser.get(args.url)
         try:
             total_english_reviews = browser.find_element_by_css_selector('.col-6.my-0').text.split()[0] #eg 175 English reviews out of 191 -> 175
         except:
             total_english_reviews = 0
         logger.info(f'Scraping {total_english_reviews} total reviews from {args.file.split(".")[0]}')
-        res = res.append({"company_name": args.file.split(".")[0], "date": "TOTAL", "employee_title": total_english_reviews}, ignore_index=True) #save total amount of english reviews in the 2nd row of the csv file
+        # res = res.append({"company_name": args.file.split(".")[0], "date": "TOTAL", "employee_title": total_english_reviews}, ignore_index=True) #save total amount of english reviews in the 2nd row of the csv file
         page[0] = get_current_page()
         logger.info(f'Starting from page {page[0]:,}.')
         time.sleep(1)
 
-    reviews_df = extract_from_page()
+    reviews_df = extract_from_page() #2. extracts and appends reviews to dataframe from current page
     res = res.append(reviews_df)
 
     # import pdb;pdb.set_trace()
 
+    #3. rinse and repeat if there are more pages
     while more_pages() and\
             len(res) + 1 < args.limit and\
-            not date_limit_reached[0] and\
-            len(reviews) !=0:
-        go_to_next_page()
+            len(reviews) !=0 and\
+            not date_limit_reached[0]:
+        go_to_next_page() #replace with browser.get(f"xyz_P{20}.htm?sort.sortType=RD&sort.ascending=false&filter.iso3Language=eng")
         reviews_df = extract_from_page()
         res = res.append(reviews_df)
         # logger.info(len(res)) #19, 29,39,... last digit can be random due to discarded reviews
-        if int(len(res)/10) % 50 == 0: #save after every 500 scraped reviews
+        if int(len(res)/10) % 5 == 0: #save after every 50 scraped reviews
             logger.info(f"Saved state after {len(res)} reviews")
             export_path = os.path.join("F://Coding//Projects//Glassdoor//Glassdoor1//csvs", args.file)
             res.to_csv(path_or_buf = export_path, index=False, encoding='utf-8')

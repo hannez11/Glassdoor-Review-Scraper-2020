@@ -10,10 +10,12 @@ os.chdir("F://Coding//Projects//Glassdoor//Glassdoor1")
 chrome_options = wd.ChromeOptions()
 # chrome_options.add_argument("user-data-dir=selenium1") #saves cookies -> set language the United States in the bottom right
 chrome_options.add_argument('--remote-debugging-port=45447') #use different port for different processes
-chrome_options.add_argument('--headless')
+chrome_options.add_argument("user-data-dir=selenium1")
+# chrome_options.add_argument('--headless')
 browser = wd.Chrome(options=chrome_options)
 
-browser.get("https://www.glassdoor.com/Reviews/PagerDuty-Reviews-E704466_P7.htm?sort.sortType=RD&sort.ascending=false")
+# browser.get("https://www.glassdoor.com/Reviews/PagerDuty-Reviews-E704466_P20.htm?sort.sortType=RD&sort.ascending=false&filter.iso3Language=eng")
+browser.get("https://www.glassdoor.com/Reviews/Seaboard-Reviews-E1006_P2.htm")
 time.sleep(1)
 
 #page navigation
@@ -28,24 +30,23 @@ time.sleep(1)
 
 #remove line break error of pros/cons
 reviews = browser.find_elements_by_class_name('empReview')
+print(len(reviews))
 
 #recommends (recommends, outloook, ceoapproval)
-for index, review in enumerate(reviews, 1):
-    if index < 6:
-            res = review.find_element_by_class_name('recommends').text
-            res = res.split('\n')
-            print("all", res) #list?
-            if "Recommends" in res[0]:
-                print("recommends", res[0])
-            else:
-                print("recommends not found")
-
-
+# for index, review in enumerate(reviews, 1):
+#     if index < 6:
+#             res = review.find_element_by_class_name('recommends').text
+#             res = res.split('\n')
+#             print("all", res) #list?
+#             if "Recommends" in res[0]:
+#                 print("recommends", res[0])
+#             else:
+#                 print("recommends not found")
 
 
 #overallrating
 for index, review in enumerate(reviews, 1):
-    if index < 4:
+    if index < 11:
         print(f"review {index}")
         # ratings = review.find_element_by_class_name('gdStars')
 
